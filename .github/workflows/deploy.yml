@@ -1,7 +1,6 @@
-# Nombre del workflow (lo verás en la pestaña "Actions")
+# Nombre del workflow (como aparecerá en la pestaña "Actions")
 name: Deploy to Hostinger FTP
 
-# Cuándo se ejecuta: cada vez que haces push al branch "main"
 on:
   push:
     branches:
@@ -9,49 +8,42 @@ on:
 
 jobs:
   ftp-deploy:
-    # Nombre del job (se verá dentro del workflow)
     name: Build & Upload Site
-    runs-on: ubuntu-latest   # GitHub ejecuta esto en un servidor Linux
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. Descargar el repositorio para trabajar con él
+      # 1️⃣ Descargar el repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Instalar Node.js para poder ejecutar Vite y Tailwind
+      # 2️⃣ Node para Vite/Tailwind
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18   # versión recomendada por Vite
+          node-version: 20.19.0
 
-      # 3. Instalar dependencias desde package-lock.json (más rápido y seguro que npm install)
+      # 3️⃣ Instalar dependencias
       - name: Install dependencies
         run: npm ci
 
-      # 4. Ejecutar el build en modo producción (genera dist/)
+      # 4️⃣ Build (genera dist/)
       - name: Build project
         run: npm run build
 
-      # 5. Subir dist/ por FTP a Hostinger
-      - name: FTP Deploy (only dist/)
-        uses: SamKirkland/FTP-Deploy-Action@v4
+      # 5️⃣ Subir SOLO dist/ a Hostinger
+      - name: FTP Deploy (dist only)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
-          server: ${{ secrets.FTP_HOST }}        # IP del servidor
-          username: ${{ secrets.FTP_USER }}      # Usuario FTP
-          password: ${{ secrets.FTP_PASSWORD }}  # Contraseña FTP
-          protocol: ftps                         # más seguro que ftp
-          port: 21                               # puerto de Hostinger
-          
-          # Carpeta local que se subirá (dist/)
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
           local-dir: dist/
-          
-          # Carpeta remota donde se sube (public_html/)
           server-dir: /public_html/
-          
-          # Archivos que NUNCA deben subirse
           exclude: |
             **/.git*
-            **/.github/**
+            **/.git*/**
             **/node_modules/**
             **/package.json
             **/package-lock.json
