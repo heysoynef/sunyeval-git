@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18        # Versión recomendada por Vite
+          node-version: 20.19.0        # Versión recomendada por Vite
 
       # 3️⃣ Instala dependencias usando package-lock.json (npm ci)
       # Es más rápido y más seguro que npm install
