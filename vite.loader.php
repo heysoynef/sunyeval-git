@@ -2,10 +2,10 @@
 
 function loadViteAssets(string $entry = "src/main.js") {
 
-    // 🔥 Ruta correcta EN PRODUCCIÓN (después de tu deploy vía Actions)
+    // Ruta al manifest en tu servidor (Hostinger)
     $manifestPath = __DIR__ . "/.vite/manifest.json";
 
-    // 🚀 MODO PRODUCCIÓN
+    // 🚀 PRODUCCIÓN
     if (file_exists($manifestPath)) {
 
         $manifest = json_decode(file_get_contents($manifestPath), true);
@@ -14,23 +14,24 @@ function loadViteAssets(string $entry = "src/main.js") {
             return "<!-- Entry $entry no encontrado en manifest -->";
         }
 
+        // OJO: El manifest YA incluye "assets/..."
         $css = $manifest[$entry]["css"][0] ?? null;
         $js  = $manifest[$entry]["file"];
 
         $html = "";
 
-        // CSS (si existe)
+        // CSS
         if ($css) {
-            $html .= '<link rel="stylesheet" href="/assets/' . $css . '">' . PHP_EOL;
+            $html .= '<link rel="stylesheet" href="/' . $css . '">' . PHP_EOL;
         }
 
         // JS
-        $html .= '<script type="module" src="/assets/' . $js . '"></script>' . PHP_EOL;
+        $html .= '<script type="module" src="/' . $js . '"></script>' . PHP_EOL;
 
         return $html;
     }
 
-    // 🧑‍💻 MODO DEV (Vite Dev Server)
+    // 🧑‍💻 DEV
     return <<<HTML
 <!-- VITE DEV -->
 <script type="module" src="http://localhost:5173/src/main.js"></script>
