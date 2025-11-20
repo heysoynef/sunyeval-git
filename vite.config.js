@@ -1,12 +1,24 @@
 import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   build: {
     outDir: 'dist',
-    manifest: true,          // <<<<<< ACTIVA EL MANIFEST
+    manifest: true,
     rollupOptions: {
-      input: 'src/main.js',  // punto de entrada (no usa HTML)
+      input: 'src/main.js',
     },
-    emptyOutDir: true
-  }
+    emptyOutDir: true,
+  },
+
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: '*.php',
+          dest: './'   // pone los PHP en dist/
+        }
+      ]
+    })
+  ]
 });
