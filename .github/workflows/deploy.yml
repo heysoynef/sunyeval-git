@@ -1,7 +1,6 @@
 # Nombre del workflow (como aparecerá en la pestaña "Actions")
 name: Deploy to Hostinger FTP
 
-# Se ejecuta cada vez que haces push al branch main
 on:
   push:
     branches:
@@ -9,56 +8,42 @@ on:
 
 jobs:
   ftp-deploy:
-    # Nombre del job dentro del workflow
     name: Build & Upload Site
-    runs-on: ubuntu-latest   # El workflow corre en un servidor Linux
+    runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Descarga el repo para trabajar con él
+      # 1️⃣ Descargar el repo
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          # Trae algo de historial para que el action pueda detectar cambios
-          fetch-depth: 2
 
-      # 2️⃣ Instala Node.js (usa la versión que ya tenías configurada)
+      # 2️⃣ Node para Vite/Tailwind
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20.19.0
 
-      # 3️⃣ Instala dependencias usando package-lock.json (npm ci)
+      # 3️⃣ Instalar dependencias
       - name: Install dependencies
         run: npm ci
 
-      # 4️⃣ Hace el build de producción (genera dist/)
+      # 4️⃣ Build (genera dist/)
       - name: Build project
         run: npm run build
 
-      # 5️⃣ Sube SOLAMENTE la carpeta dist/ por FTP a Hostinger
+      # 5️⃣ Subir SOLO dist/ a Hostinger
       - name: FTP Deploy (dist only)
-        # OJO: aquí usamos la v4.3.4 (sin la "v" delante)
-        uses: SamKirkland/FTP-Deploy-Action@4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
         with:
-          # Datos de conexión (los toma de tus secrets)
-          server: ${{ secrets.FTP_HOST }}        # 45.93.101.60
-          username: ${{ secrets.FTP_USER }}      # usuario FTP
-          password: ${{ secrets.FTP_PASSWORD }}  # contraseña FTP
-
-          # Protocolo y puerto. Si después quieres FTPS cambiamos esto a "ftps"
-          protocol: ftp
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
           port: 21
-
-          # Carpeta local que se subirá (tu build de Vite)
           local-dir: dist/
-
-          # Carpeta remota donde se subirán los archivos en Hostinger
           server-dir: /public_html/
-
-          # Archivos/carpetas que NO se deben subir
           exclude: |
             **/.git*
-            **/.github/**
+            **/.git*/**
             **/node_modules/**
             **/package.json
             **/package-lock.json
