@@ -18,45 +18,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Instala Node.js para poder correr Vite y Tailwind
+      # 2️⃣ Instala Node.js (VERSIÓN QUE TÚ USAS)
+      # Muy importante: Vite requiere Node 20.10+ o 22+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.19.0        # Versión recomendada por Vite
+          node-version: 20.19.0   # ✔️ Esta versión funciona perfecto con Vite
 
-      # 3️⃣ Instala dependencias usando package-lock.json (npm ci)
-      # Es más rápido y más seguro que npm install
+      # 3️⃣ Instalar dependencias (npm ci usa package-lock.json)
       - name: Install dependencies
         run: npm ci
 
-      # 4️⃣ Hace el build de producción (genera dist/)
+      # 4️⃣ Ejecuta el build para producción (genera dist/)
       - name: Build project
         run: npm run build
 
-      # 5️⃣ Sube SOLAMENTE la carpeta dist/ por FTP a Hostinger
-      - name: FTP Deploy (only dist/)
-        uses: SamKirkland/FTP-Deploy-Action@v3.1.1   # Versión correcta del plugin
+      # 5️⃣ Sube SOLO dist/ al servidor (Hostinger)
+      - name: FTP Deploy (dist only)
+        uses: SamKirkland/FTP-Deploy-Action@v3.1.1   # ✔️ Versión estable que sí existe
         with:
-          server: ${{ secrets.FTP_HOST }}           # IP o dominio del servidor FTP
-          username: ${{ secrets.FTP_USER }}         # Usuario FTP
-          password: ${{ secrets.FTP_PASSWORD }}     # Contraseña FTP
+          # ❗ Importante: v3 NO usa "server", "username", etc.
+          # Debes usar estos nombres exactos:
+          ftp-server: ftps://${{ secrets.FTP_HOST }}/public_html
+          ftp-username: ${{ secrets.FTP_USER }}
+          ftp-password: ${{ secrets.FTP_PASSWORD }}
 
-          protocol: ftps      # FTPS = más seguro que FTP
-          port: 21            # Puerto estándar de Hostinger
+          # Carpeta local que se sube
+          local-dir: dist
 
-          # Carpeta local (lo que GitHub subirá)
-          local-dir: dist/
-
-          # Carpeta remota donde se subirán los archivos
-          server-dir: /public_html/
-
-          # Archivos o carpetas que NO deben subirse
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/node_modules/**
-            **/package.json
-            **/package-lock.json
-            **/vite.config.js
-            **/postcss.config.js
-            **/tailwind.config.js
+          # Permitir certificados FTPS inseguros (Hostinger a veces falla si no se pone)
+          git-ftp-args: "--insecure"
