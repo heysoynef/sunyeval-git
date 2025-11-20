@@ -1,7 +1,7 @@
 # Nombre del workflow (como aparecerá en la pestaña "Actions")
 name: Deploy to Hostinger FTP
 
-# Cuándo se ejecuta: cada vez que haces push al branch "main"
+# Se ejecuta cada vez que haces push al branch main
 on:
   push:
     branches:
@@ -17,34 +17,51 @@ jobs:
       # 1️⃣ Descarga el repo para trabajar con él
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Trae algo de historial para que el action pueda detectar cambios
+          fetch-depth: 2
 
-      # 2️⃣ Instala Node.js (VERSIÓN QUE TÚ USAS)
-      # Muy importante: Vite requiere Node 20.10+ o 22+
+      # 2️⃣ Instala Node.js (usa la versión que ya tenías configurada)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.19.0   # ✔️ Esta versión funciona perfecto con Vite
+          node-version: 20.19.0
 
-      # 3️⃣ Instalar dependencias (npm ci usa package-lock.json)
+      # 3️⃣ Instala dependencias usando package-lock.json (npm ci)
       - name: Install dependencies
         run: npm ci
 
-      # 4️⃣ Ejecuta el build para producción (genera dist/)
+      # 4️⃣ Hace el build de producción (genera dist/)
       - name: Build project
         run: npm run build
 
-      # 5️⃣ Sube SOLO dist/ al servidor (Hostinger)
+      # 5️⃣ Sube SOLAMENTE la carpeta dist/ por FTP a Hostinger
       - name: FTP Deploy (dist only)
-        uses: SamKirkland/FTP-Deploy-Action@v3.1.1   # ✔️ Versión estable que sí existe
+        # OJO: aquí usamos la v4.3.4 (sin la "v" delante)
+        uses: SamKirkland/FTP-Deploy-Action@4.3.4
         with:
-          # ❗ Importante: v3 NO usa "server", "username", etc.
-          # Debes usar estos nombres exactos:
-          ftp-server: ftps://${{ secrets.FTP_HOST }}/public_html
-          ftp-username: ${{ secrets.FTP_USER }}
-          ftp-password: ${{ secrets.FTP_PASSWORD }}
+          # Datos de conexión (los toma de tus secrets)
+          server: ${{ secrets.FTP_HOST }}        # 45.93.101.60
+          username: ${{ secrets.FTP_USER }}      # usuario FTP
+          password: ${{ secrets.FTP_PASSWORD }}  # contraseña FTP
 
-          # Carpeta local que se sube
-          local-dir: dist
+          # Protocolo y puerto. Si después quieres FTPS cambiamos esto a "ftps"
+          protocol: ftp
+          port: 21
 
-          # Permitir certificados FTPS inseguros (Hostinger a veces falla si no se pone)
-          git-ftp-args: "--insecure"
+          # Carpeta local que se subirá (tu build de Vite)
+          local-dir: dist/
+
+          # Carpeta remota donde se subirán los archivos en Hostinger
+          server-dir: /public_html/
+
+          # Archivos/carpetas que NO se deben subir
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/package.json
+            **/package-lock.json
+            **/vite.config.js
+            **/postcss.config.js
+            **/tailwind.config.js
