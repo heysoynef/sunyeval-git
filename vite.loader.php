@@ -2,7 +2,8 @@
 
 function loadViteAssets(string $entry = "src/main.js") {
 
-    $manifestPath = __DIR__ . "/dist/.vite/manifest.json";
+    // 🔥 Ruta correcta EN PRODUCCIÓN (después de tu deploy vía Actions)
+    $manifestPath = __DIR__ . "/.vite/manifest.json";
 
     // 🚀 MODO PRODUCCIÓN
     if (file_exists($manifestPath)) {
@@ -18,16 +19,18 @@ function loadViteAssets(string $entry = "src/main.js") {
 
         $html = "";
 
+        // CSS (si existe)
         if ($css) {
-            $html .= '<link rel="stylesheet" href="/sunyeval/dist/' . $css . '">' . PHP_EOL;
+            $html .= '<link rel="stylesheet" href="/assets/' . $css . '">' . PHP_EOL;
         }
 
-        $html .= '<script type="module" src="/sunyeval/dist/' . $js . '"></script>' . PHP_EOL;
+        // JS
+        $html .= '<script type="module" src="/assets/' . $js . '"></script>' . PHP_EOL;
 
         return $html;
     }
 
-    // 🧑‍💻 MODO DESARROLLO: Vite Dev Server
+    // 🧑‍💻 MODO DEV (Vite Dev Server)
     return <<<HTML
 <!-- VITE DEV -->
 <script type="module" src="http://localhost:5173/src/main.js"></script>
