@@ -1,0 +1,60 @@
+# Nombre del workflow (lo verás en la pestaña "Actions")
+name: Deploy to Hostinger FTP
+
+# Cuándo se ejecuta: cada vez que haces push al branch "main"
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ftp-deploy:
+    # Nombre del job (se verá dentro del workflow)
+    name: Build & Upload Site
+    runs-on: ubuntu-latest   # GitHub ejecuta esto en un servidor Linux
+
+    steps:
+      # 1. Descargar el repositorio para trabajar con él
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Instalar Node.js para poder ejecutar Vite y Tailwind
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18   # versión recomendada por Vite
+
+      # 3. Instalar dependencias desde package-lock.json (más rápido y seguro que npm install)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Ejecutar el build en modo producción (genera dist/)
+      - name: Build project
+        run: npm run build
+
+      # 5. Subir dist/ por FTP a Hostinger
+      - name: FTP Deploy (only dist/)
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_HOST }}        # IP del servidor
+          username: ${{ secrets.FTP_USER }}      # Usuario FTP
+          password: ${{ secrets.FTP_PASSWORD }}  # Contraseña FTP
+          protocol: ftps                         # más seguro que ftp
+          port: 21                               # puerto de Hostinger
+          
+          # Carpeta local que se subirá (dist/)
+          local-dir: dist/
+          
+          # Carpeta remota donde se sube (public_html/)
+          server-dir: /public_html/
+          
+          # Archivos que NUNCA deben subirse
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/package.json
+            **/package-lock.json
+            **/vite.config.js
+            **/postcss.config.js
+            **/tailwind.config.js
